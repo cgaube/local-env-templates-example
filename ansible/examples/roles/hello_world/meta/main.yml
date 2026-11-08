@@ -1,0 +1,8 @@
+galaxy_info:
+  author: local-env
+  description: Says hello and installs nothing, to try local-env install
+  license: MIT-0
+  platforms:
+    - name: macOS
+  galaxy_tags: [example]
+dependencies: []

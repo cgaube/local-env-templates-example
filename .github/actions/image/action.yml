@@ -1,0 +1,128 @@
+# Builds one image and pushes it to ghcr.io with the tag "latest", then
+# deletes the old versions. Each image has its own workflow
+# (.github/workflows/image-<name>.yml) that runs this action. The workflow
+# decides when to build, with its "paths" filter.
+#
+# - Push to main and manual run: builds, pushes and deletes the old versions.
+# - Pull request: only builds.
+#
+# The job that runs this action needs the permissions "contents: read" and
+# "packages: write", and must check out the repo first.
+#
+# The address of an image is ghcr.io/<owner>/<repo>/<name>, for example
+# ghcr.io/acme/local-env-templates/hello. The image gets the visibility of the
+# repo. To pull an image of a private repo, log in to ghcr.io with a token that
+# has the read:packages scope (see docker/registries.json in the README).
+name: Image
+description: Build, push and clean up one image on ghcr.io
+
+inputs:
+  name:
+    description: The last part of the image address. Lowercase.
+    required: true
+  context:
+    description: The build folder, relative to the repo root.
+    required: true
+  dockerfile:
+    description:
+      'The Dockerfile, relative to the repo root. Empty: <context>/Dockerfile.'
+    required: false
+    default: ''
+  platforms:
+    description:
+      'The platforms to build, for example linux/arm64,linux/amd64. Empty:
+      linux/arm64 (Macs with Apple silicon).'
+    required: false
+    default: ''
+  keep:
+    description:
+      'The number of old versions to keep, in addition to "latest". 0 keeps only
+      "latest". Empty: 2.'
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    # Checks the inputs and finds the image address
+    - name: Prepare
+      id: prep
+      shell: bash
+      env:
+        NAME: ${{ inputs.name }}
+        KEEP: ${{ inputs.keep }}
+        EVENT_NAME: ${{ github.event_name }}
+      run: |
+        set -euo pipefail
+        if [[ ! "$NAME" =~ ^[a-z0-9]+([._-][a-z0-9]+)*$ ]]; then
+          echo "::error::Image $NAME: use only lowercase letters, digits, '.', '_' and '-'"
+          exit 1
+        fi
+        keep="${KEEP:-2}"
+        if [[ ! "$keep" =~ ^[0-9]+$ ]]; then
+          echo "::error::Image $NAME: keep must be 0 or a positive integer, not '$keep'"
+          exit 1
+        fi
+        # Push on main and for manual runs. Pull requests only build.
+        push=true
+        if [ "$EVENT_NAME" = pull_request ]; then push=false; fi
+        # Image addresses must be lowercase
+        repo=$(tr '[:upper:]' '[:lower:]' <<<"$GITHUB_REPOSITORY")
+        {
+          echo "keep=$keep"
+          echo "push=$push"
+          echo "image=ghcr.io/$repo/$NAME"
+          echo "package=${repo#*/}/$NAME"
+        } >> "$GITHUB_OUTPUT"
+
+    # Emulates the platforms that the runner does not have (linux/arm64)
+    - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
+
+    - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+    - name: Log in to ghcr.io
+      if: steps.prep.outputs.push == 'true'
+      uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ github.token }}
+
+    # Tags and labels. Only "latest": each new build replaces the previous
+    # one. The label org.opencontainers.image.source links the package to
+    # this repo, thus the package gets the visibility and the access rules of
+    # the repo.
+    - name: Tags and labels
+      id: meta
+      uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+      with:
+        images: ${{ steps.prep.outputs.image }}
+        tags: |
+          type=raw,value=latest,enable={{is_default_branch}}
+
+    - name: Build and push
+      uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+      with:
+        context: ${{ inputs.context }}
+        file:
+          ${{ inputs.dockerfile || format('{0}/Dockerfile', inputs.context) }}
+        platforms: ${{ inputs.platforms || 'linux/arm64' }}
+        push: ${{ steps.prep.outputs.push }}
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        # One cache for each image, kept in the GitHub Actions cache
+        cache-from: type=gha,scope=${{ inputs.name }}
+        cache-to: type=gha,scope=${{ inputs.name }},mode=max
+
+    # The push moves "latest" to the new image, but the old image stays in
+    # the registry as an untagged version. This step keeps the newest <keep>
+    # untagged versions and deletes the others. It knows multi-platform
+    # images, thus it never deletes the per-platform manifests and
+    # attestations of an image that it keeps.
+    - name: Delete the old versions
+      if: steps.prep.outputs.push == 'true'
+      uses: dataaxiom/ghcr-cleanup-action@d52806a0dc70b430571a37da1fde39733ffd640f # v1.2.2
+      with:
+        token: ${{ github.token }}
+        package: ${{ steps.prep.outputs.package }}
+        keep-n-untagged: ${{ steps.prep.outputs.keep }}

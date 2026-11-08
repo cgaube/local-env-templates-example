@@ -1,0 +1,8 @@
+galaxy_info:
+  author: local-env
+  description: Runs whoami with sudo and installs nothing, to try become
+  license: MIT-0
+  platforms:
+    - name: macOS
+  galaxy_tags: [example]
+dependencies: []

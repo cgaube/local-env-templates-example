@@ -1,0 +1,59 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/cgaube/local-env/main/schemas/source-manifest.json
+name: acme
+label: Acme Platform
+# None yet: uncomment the ones you need, and remove the {}
+logins: {}
+  # --- Docker registries: to pull private images ----------------------------
+
+  # Add one if your templates use private images, from your company's registry
+  # or from ghcr.io (where .github/workflows/ might push them, if this repo is
+  # private). local-env then asks each person for a token. One per host:
+  #  ghcr:
+  #    type: registry
+  #    host: ghcr.io
+  #    usernameHelp: your GitHub username
+  #    tokenHelp: a classic token with read:packages only
+
+  # --- Secret stores: where roles and stacks get their secrets -------------
+
+  # An AWS account with SSO: local-env runs `aws sso login`
+  #  acme-dev:
+  #    type: aws
+  #    sso:
+  #      {
+  #        startUrl: https://acme.awsapps.com/start,
+  #        region: eu-west-1,
+  #        accountId: '123456789012',
+  #        roleName: DevSecretsRead,
+  #      }
+  #    region: eu-west-1
+  #    help: Request the dev account in #platform
+  # A Vault: local-env asks each person for a token
+  #  acme-vault:
+  #    type: vault
+  #    address: https://vault.acme.com
+  #    method: token
+  #    help: Get a token from the Vault UI
+
+# Where the secrets are, by the name of the variable each one fills. local-env
+# never asks for them: it reads them with the login, and never writes them to
+# the disk.
+# - A role of this source gets the ones it declares as inputs
+#   (meta/argument_specs.yml), when local-env installs it. Usually lowercase.
+# - A stack of this source gets the ones its compose file uses, when local-env
+#   deploys it: Dockhand keeps them as secret variables. UPPERCASE, as images
+#   expect, and in the list form, so that Dockhand hides them in its pages:
+#     environment:
+#       - API_TOKEN=${API_TOKEN:?from the vault}
+#secrets:
+#  my_role_token:
+#    login: acme-dev
+#    ref: my-team/my-role # the secret in AWS Secrets Manager
+#  my_role_vault_token:
+#    login: acme-vault
+#    ref: secret/my-team/my-role # the path of the KV entry
+#    field: token # its key: required for Vault
+#  API_TOKEN:
+#    login: acme-dev
+#    ref: my-team/my-app # a secret of a stack
+#    field: token # a key of the secret's JSON

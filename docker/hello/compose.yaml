@@ -1,0 +1,12 @@
+name: hello
+services:
+  hello:
+    # Dockhand builds ./site when you deploy: local-env serves it to Docker
+    build: ./site
+    image: local-env/hello
+    container_name: Hello
+    labels:
+      dockhand.tags: 'example'
+    restart: unless-stopped
+    environment:
+      VIRTUAL_HOST: hello

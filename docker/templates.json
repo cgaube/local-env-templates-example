@@ -1,0 +1,29 @@
+{
+  "version": "3",
+  "templates": [
+    {
+      "type": 3,
+      "title": "Hello",
+      "name": "hello",
+      "description": "Example of a template that builds its own image.",
+      "categories": ["example"],
+      "platform": "linux",
+      "repository": {
+        "url": "https://github.com/cgaube/local-env-templates-example",
+        "stackfile": "docker/hello/compose.yaml"
+      }
+    },
+    {
+      "type": 3,
+      "title": "Greeting",
+      "name": "greeting",
+      "description": "Example of a template that asks for a value when you deploy it.",
+      "categories": ["example"],
+      "platform": "linux",
+      "repository": {
+        "url": "https://github.com/cgaube/local-env-templates-example",
+        "stackfile": "docker/greeting/compose.yaml"
+      }
+    }
+  ]
+}

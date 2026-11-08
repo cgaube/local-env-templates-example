@@ -1,0 +1,16 @@
+# A page that shows a text you choose when you deploy it. local-env asks for
+# GREETING, as it has no default (the :? form). Give everything else a
+# default (the :- form), and keep :? for what only the user knows.
+name: greeting # The link to the deployed stacks: unique, do not change it
+services:
+  greeting:
+    image: hashicorp/http-echo:latest
+    container_name: greeting
+    command: ['-text=${GREETING:?the text the page shows}']
+    restart: unless-stopped
+    labels:
+      dockhand.tags: 'example'
+    # The list form: Dockhand hides a secret written this way in its pages.
+    # local-env.yml shows how to give a stack a secret from your vault.
+    environment:
+      - VIRTUAL_HOST=greeting

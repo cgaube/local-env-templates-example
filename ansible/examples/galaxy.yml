@@ -1,0 +1,15 @@
+namespace: acme
+name: examples
+version: 1.0.0
+readme: README.md
+authors:
+  - Acme
+description: 'Example roles to try local-env install'
+license:
+  - MIT-0
+tags: [macos]
+dependencies:
+  # hello_galaxy uses its role. Exact version: a collection from an unknown
+  # author, so a new version never installs without a change here.
+  padminisys.hello: '==1.0.0'
+repository: https://github.com/cgaube/local-env-templates-example

@@ -1,0 +1,6 @@
+# Ansible does not apply the defaults of meta/argument_specs.yml: the same
+# values go here
+hello_inputs_greeting: Hello
+hello_inputs_shout: false
+hello_inputs_times: 1
+hello_inputs_friends: []

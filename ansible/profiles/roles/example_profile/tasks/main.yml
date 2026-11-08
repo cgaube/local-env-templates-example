@@ -1,0 +1,4 @@
+# Runs after the roles of `dependencies` in meta/main.yml
+- name: Show the team
+  ansible.builtin.debug:
+    msg: 'Team: {{ example_profile_team }}'

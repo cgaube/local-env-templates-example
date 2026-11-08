@@ -1,0 +1,15 @@
+galaxy_info:
+  author: local-env
+  description:
+    An example that uses a role of padminisys.hello, a collection from Galaxy.
+    It only prints a message and changes nothing on your Mac.
+  license: MIT-0
+  platforms:
+    - name: macOS
+  galaxy_tags: [example]
+# No tasks: the role of padminisys.hello prints the message. ../../galaxy.yml
+# lists the collection in its dependencies.
+dependencies:
+  - role: padminisys.hello.hello
+    vars:
+      hello_user: local-env

@@ -1,0 +1,13 @@
+# Runs `whoami` with sudo, to show `become`. The play then needs the sudo
+# password: `mise run ansible:check -- -K`.
+- name: Get the become user
+  become: true
+  ansible.builtin.command: whoami
+  register: hello_root_become_user
+  changed_when: false
+  # --check skips `command` tasks. This task changes nothing, so it always runs.
+  check_mode: false
+
+- name: Say hello as root
+  ansible.builtin.debug:
+    msg: 'Hello from local-env, {{ hello_root_become_user.stdout }}!'

@@ -1,0 +1,10 @@
+galaxy_info:
+  author: local-env
+  description:
+    Says hello with the values you give it, to try the inputs of a tool. It only
+    prints messages and changes nothing on your Mac.
+  license: MIT-0
+  platforms:
+    - name: macOS
+  galaxy_tags: [example]
+dependencies: []

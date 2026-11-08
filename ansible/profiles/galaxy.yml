@@ -1,0 +1,14 @@
+namespace: acme
+name: profiles
+version: 1.0.0
+readme: README.md
+authors:
+  - Acme
+description: 'Example profiles: each one is a set of roles from acme.examples'
+license:
+  - MIT-0
+tags: [macos]
+# Do not list acme.examples here: Ansible looks for it on Galaxy and fails.
+# The role dependencies are sufficient.
+dependencies: {}
+repository: https://github.com/cgaube/local-env-templates-example

@@ -1,0 +1,19 @@
+- name: Say hello
+  vars:
+    message: '{{ hello_inputs_greeting }}, {{ hello_inputs_name }}!'
+  ansible.builtin.debug:
+    msg: '{{ message | upper if hello_inputs_shout else message }}'
+  loop: '{{ range(hello_inputs_times) | list }}'
+  loop_control:
+    label: '{{ item + 1 }}'
+
+- name: Greet the friends
+  ansible.builtin.debug:
+    msg: '{{ hello_inputs_greeting }}, {{ item }}!'
+  loop: '{{ hello_inputs_friends }}'
+
+- name: Say whether a token was given
+  ansible.builtin.debug:
+    msg: >-
+      {{ 'A token was given.' if hello_inputs_token is defined else 'No token: a
+      source gives a secret from its vault (see secrets: in local-env.yml).' }}

@@ -1,0 +1,5 @@
+# Read by local-env, not by Ansible.
+# The name the dashboard and the CLI show, instead of acme.profiles.example_profile
+label: Example Profile
+# No stack templates: this example profile only installs roles
+stacks: []

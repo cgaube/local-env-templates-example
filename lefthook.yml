@@ -1,0 +1,21 @@
+# Git hooks, installed by `mise install` (mise.toml)
+# https://lefthook.dev
+
+# A short summary; a failing job still prints its errors
+output:
+  - summary
+  - success
+  - failure
+
+# Formats the staged files and adds the changes to the commit, then checks the
+# templates when something in docker/ changes. Tools run through mise, so the
+# hooks also work from apps that don't load your shell (editors, git GUIs).
+pre-commit:
+  piped: true
+  jobs:
+    - name: format
+      run: mise exec -- oxfmt --no-error-on-unmatched-pattern {staged_files}
+      stage_fixed: true
+    - name: templates
+      glob: 'docker/**'
+      run: mise exec -- scripts/check-templates.sh

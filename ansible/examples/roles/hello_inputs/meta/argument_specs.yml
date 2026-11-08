@@ -1,0 +1,40 @@
+# The values this role takes. local-env shows a field for each one on the
+# Tools page, and `local-env install` asks for a required one without a value.
+argument_specs:
+  main:
+    short_description: Says hello with your values
+    options:
+      # Required, no default: a text field, asked by `local-env install`
+      hello_inputs_name:
+        type: str
+        required: true
+        description: The name to say hello to
+      # Choices: a select. The default is the placeholder.
+      hello_inputs_greeting:
+        type: str
+        choices: [Hello, Hi, Bonjour, Hola]
+        default: Hello
+        description: The word to say hello with
+      # A bool: a switch
+      hello_inputs_shout:
+        type: bool
+        default: false
+        description: Say it in capitals
+      # An int: a number field
+      hello_inputs_times:
+        type: int
+        default: 1
+        description: How many times to say it
+      # A list: a text field. Ansible splits "a,b" into a list.
+      hello_inputs_friends:
+        type: list
+        elements: str
+        default: []
+        description: Friends to greet too, separated by commas
+      # A secret: never shown, asked or saved by local-env. No source gives it
+      # here (see secrets: in local-env.yml for one that does), and it is optional, so the
+      # install still runs.
+      hello_inputs_token:
+        type: str
+        no_log: true
+        description: A secret local-env does not support yet

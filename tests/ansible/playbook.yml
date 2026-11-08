@@ -1,0 +1,16 @@
+# Runs with --check (`mise run ansible:check`): Ansible shows what it would
+# change, and changes nothing. Add a role here to test it.
+- name: Test the collections
+  hosts: localhost
+  connection: local
+  vars:
+    # The required values of hello_inputs and example_profile
+    hello_inputs_name: local-env
+    example_profile_team: Examples
+  roles:
+    - acme.examples.hello_world
+    # Uses become: uncomment it, then run `mise run ansible:check -- -K`
+    # - acme.examples.hello_root
+    - acme.examples.hello_galaxy
+    - acme.examples.hello_inputs
+    - acme.profiles.example_profile

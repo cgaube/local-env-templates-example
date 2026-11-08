@@ -1,0 +1,32 @@
+# Tools for the git hooks (lefthook.yml). `mise install` installs them, then
+# the hooks.
+[tools]
+jq = "1.8"
+lefthook = "2"
+"npm:oxfmt" = "0.74.0"
+
+[hooks]
+postinstall = "lefthook install"
+
+# Installs the collections of ansible/ in tests/ansible/collections/, then runs
+# tests/ansible/playbook.yml with --check. Needs Ansible 2.16 or later.
+# Arguments go to ansible-playbook.
+[tasks."ansible:check"]
+description = "Try the Ansible collections of this working copy"
+dir = "{{config_root}}/tests/ansible"
+# Connects the task to the terminal, so that you can type the password.
+raw = true
+# Add -K if a role uses `become`: Ansible then asks for the sudo password
+# (`mise run ansible:check -- -K`).
+run = [
+  "ansible-galaxy collection install -r requirements.yml --force",
+  "ansible-playbook playbook.yml --check",
+]
+
+[tasks."ansible:check".env]
+# ./collections first: ansible-galaxy installs there, and does not warn that
+# the folder is not a collections path. Then Ansible's default paths, where
+# community.general usually is.
+ANSIBLE_COLLECTIONS_PATH = "./collections:~/.ansible/collections:/usr/share/ansible/collections"
+ANSIBLE_LOCALHOST_WARNING = "false"
+ANSIBLE_INVENTORY_UNPARSED_WARNING = "false"

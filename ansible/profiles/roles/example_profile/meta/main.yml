@@ -1,0 +1,13 @@
+galaxy_info:
+  author: local-env
+  description: Example profile, a set of roles with role inputs
+  license: MIT-0
+  platforms:
+    - name: macOS
+  galaxy_tags: [profile]
+dependencies:
+  # The profile sets one value of hello_inputs. The user gives the others.
+  # An extra var (-e) still has priority over this value.
+  - role: acme.examples.hello_inputs
+    vars:
+      hello_inputs_greeting: Bonjour

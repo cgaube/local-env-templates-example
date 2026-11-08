@@ -1,0 +1,6 @@
+# The collections of ../../ansible/, from your working copy: to try a change
+# before you push it. Run `mise run ansible:check`, or the commands from this
+# folder, since Ansible resolves the path from the current folder.
+collections:
+  - name: ../../ansible
+    type: subdirs

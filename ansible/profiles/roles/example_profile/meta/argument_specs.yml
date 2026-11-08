@@ -1,0 +1,10 @@
+# The values this profile takes, in addition to the values of its roles
+argument_specs:
+  main:
+    short_description: Example profile, a set of roles with role inputs
+    options:
+      # Required, no default: a text field, asked by `local-env install`
+      example_profile_team:
+        type: str
+        required: true
+        description: The name of your team

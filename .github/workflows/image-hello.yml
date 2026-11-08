@@ -1,0 +1,57 @@
+# Builds the image "hello" and pushes it to ghcr.io/<owner>/<repo>/hello. The
+# steps are in .github/actions/image/action.yml.
+#
+# An example: docker/hello/compose.yaml builds its image when you deploy, and
+# does not use this one. To use the prebuilt image, replace `build: ./site`
+# and `image:` in the compose file with `image: ghcr.io/<owner>/<repo>/hello`.
+#
+# Manual only (Actions tab → Image hello → Run workflow): a repo made from
+# this template does not build an image it does not use. When you have an
+# image of your own, copy this file to image-<name>.yml, change the name, the
+# paths and the inputs of the action, then uncomment `push` and
+# `pull_request` below:
+# - push to main: builds and pushes the image if one of the paths changed;
+# - pull request: builds the image if one of the paths changed, but does not
+#   push it.
+name: Image hello
+
+on:
+  workflow_dispatch:
+  # push:
+  #   branches: [main]
+  #   # The files that go into the image. A change to other files, for
+  #   # example compose.yaml or README.md, does not start a build.
+  #   paths: &paths
+  #     - 'docker/hello/site/**'
+  #     - '.github/actions/image/**'
+  #     - '.github/workflows/image-hello.yml'
+  # pull_request:
+  #   paths: *paths
+
+permissions:
+  contents: read
+
+# A new push to the same branch cancels the build of the previous push
+concurrency:
+  group: image-hello-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: ./.github/actions/image
+        with:
+          name: hello
+          context: docker/hello/site
+          # Optional inputs:
+          #   dockerfile: Default: <context>/Dockerfile.
+          #   platforms:  Default: linux/arm64 (Macs with Apple silicon). For
+          #               x86 machines too: linux/arm64,linux/amd64.
+          #   keep:       The number of old versions to keep, in addition to
+          #               "latest". 0: keep only "latest". Default: 2.
