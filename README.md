@@ -35,7 +35,7 @@ install the tools with `local-env install example_profile`.
      of the same name, so do not keep `acme`.
    - Set `repository:` in `ansible/*/galaxy.yml` and `repository.url` in
      `docker/templates.json` to the URL of your repo.
-   - Set `SOURCE_URL` in `onboarding.sh` to the URL of your repo (see
+   - Set `LOCAL_ENV_SOURCE_URL` in `onboarding.sh` to the URL of your repo (see
      [Onboard your team](#onboard-your-team)).
 4. Add your repo to local-env: `local-env sources add <your repo URL>`.
 
@@ -164,9 +164,11 @@ Homebrew if it is missing, then local-env, sets it up and starts it, adds this
 source and asks for the employee's profile. Run it again at any time: each step
 skips what is already done.
 
-1. Set the values at the top: `SOURCE_URL` (your repo), `DOMAIN`, `PROFILE`
-   (empty: the employee picks one) and `DOCKER_CASK` (your Docker engine, if the
-   script should install it).
+1. Set the values at the top: `LOCAL_ENV_SOURCE_URL` (your repo),
+   `LOCAL_ENV_DOMAIN` and `LOCAL_ENV_PROFILE` (empty: the employee picks one).
+   An environment variable of the same name wins. The script starts Docker
+   Desktop or OrbStack when the employee uses one, and installs Colima
+   otherwise.
 2. Serve it where a new Mac can download it without a login. A public repo can
    use its raw URL; for a private repo, copy the file to your intranet or to a
    public page.

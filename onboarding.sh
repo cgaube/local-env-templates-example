@@ -8,30 +8,27 @@
 #
 # `curl -fsSL https://example.com/local-env/onboarding.sh | bash` works too.
 #
-# It installs Homebrew when it is missing, checks Docker and installs
-# local-env, then `local-env onboard` sets it up, adds your source, starts it
-# and asks the employee for their profile. Run it again at any time: each
-# step skips what is already done, so after a fix (start Docker, log in to
-# GitHub) it goes on from where it stopped.
+# It installs Homebrew and Docker (Colima) when they are missing, and
+# local-env, then `local-env onboard` sets it up, adds your source, starts
+# it and asks the employee for their profile. Run it again at any
+# time: each step skips what is already done, so after a fix (start Docker,
+# log in to GitHub) it goes on from where it stopped.
 #
 # The guide: https://cgaube.github.io/local-env/write-a-source/onboard-your-team
 
 # ---- Your company's values --------------------------------------------------
 
+# Defaults: a script that sets one of them before running this one wins.
+
 # The git repo of your source: this repo
-SOURCE_URL="https://github.com/cgaube/local-env-templates-example"
+LOCAL_ENV_SOURCE_URL="${LOCAL_ENV_SOURCE_URL:-https://github.com/cgaube/local-env-templates-example}"
 
 # The domain of the local apps (https://<app>.dev.test). Set on the first
 # run only: an employee who changed it later keeps theirs.
-DOMAIN="dev.test"
+LOCAL_ENV_DOMAIN="${LOCAL_ENV_DOMAIN:-dev.test}"
 
 # The profile to install, by name (backend). Empty: the employee picks one.
-PROFILE=""
-
-# A Homebrew cask that installs your Docker engine when `docker` is missing
-# (orbstack, docker-desktop…). Empty: the script asks the employee to install
-# one.
-DOCKER_CASK=""
+LOCAL_ENV_PROFILE="${LOCAL_ENV_PROFILE:-}"
 
 # ------------------------------------------------------------------------------
 
@@ -89,18 +86,36 @@ ensure_brew() {
   ok 'Homebrew installed'
 }
 
+ensure_colima() {
+  command -v colima >/dev/null && return
+  brew install colima docker docker-compose docker-buildx
+  # Homebrew's docker CLI finds its plugins there
+  local plugins="$HOME/.docker/cli-plugins" plugin
+  mkdir -p "$plugins"
+  for plugin in docker-compose docker-buildx; do
+    [ -e "$plugins/$plugin" ] ||
+      ln -s "$(brew --prefix)/bin/$plugin" "$plugins/"
+  done
+}
+
+# The Docker engine of this account: Docker Desktop (set up in this account:
+# it linked its plugin) or OrbStack, started when stopped. Otherwise, Colima:
+# installed when missing, then started.
 ensure_docker() {
   step 'Docker'
-  if ! command -v docker >/dev/null && [ -n "$DOCKER_CASK" ]; then
-    brew install --cask "$DOCKER_CASK"
-    fail "Open ${DOCKER_CASK} once, so that it starts the Docker engine."
+  if ! docker info >/dev/null 2>&1; then
+    if [ -e "$HOME/.docker/cli-plugins/docker-desktop" ]; then
+      docker desktop start
+    elif command -v orb >/dev/null; then
+      orb start
+    else
+      ensure_colima
+      colima start
+    fi
   fi
-  command -v docker >/dev/null ||
-    fail 'Install a Docker engine (OrbStack, Docker Desktop, Colima…).'
   # shellcheck disable=SC2016 # the command, as text
   docker compose version >/dev/null 2>&1 ||
     fail 'local-env needs Docker Compose v2 (`docker compose`).'
-  docker info >/dev/null 2>&1 || fail 'Start your Docker engine.'
   ok 'Docker running'
 }
 
@@ -121,11 +136,13 @@ main() {
   install_local_env
 
   # local-env does the rest: setup (the domain on the first run only), your
-  # source, start, then the profile (asked when PROFILE is empty, the first
-  # time only). It asks for your password for the DNS and the certificate,
-  # and a private repo asks for your git login.
-  local args=("$SOURCE_URL" --domain "$DOMAIN")
-  if [ -n "$PROFILE" ]; then args+=(--profile "$PROFILE"); fi
+  # source, start, then the profile (asked when LOCAL_ENV_PROFILE is empty,
+  # the first time only). It asks for your password for the DNS and the
+  # certificate, and a private repo asks for your git login.
+  local args=("$LOCAL_ENV_SOURCE_URL" --domain "$LOCAL_ENV_DOMAIN")
+  if [ -n "$LOCAL_ENV_PROFILE" ]; then
+    args+=(--profile "$LOCAL_ENV_PROFILE")
+  fi
   ask local-env onboard "${args[@]}"
 
   echo 'Open a new terminal, so that it finds brew and local-env.'
