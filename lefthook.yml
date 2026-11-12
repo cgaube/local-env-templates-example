@@ -8,7 +8,7 @@ output:
   - failure
 
 # Formats the staged files and adds the changes to the commit, then checks the
-# templates when something in docker/ changes. Tools run through mise, so the
+# templates when something in docker/ changes, and the shell scripts. Tools run through mise, so the
 # hooks also work from apps that don't load your shell (editors, git GUIs).
 pre-commit:
   piped: true
@@ -19,3 +19,6 @@ pre-commit:
     - name: templates
       glob: 'docker/**'
       run: mise exec -- scripts/check-templates.sh
+    - name: scripts
+      glob: '*.sh'
+      run: mise exec -- shellcheck {staged_files}

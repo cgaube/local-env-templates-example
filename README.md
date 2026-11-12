@@ -10,6 +10,7 @@ make the source of your team.
   your Mac
 - The tools to check the templates before each commit, and to build images on
   GitHub
+- An onboarding script that sets up a new employee's Mac with one command
 
 ## Try it
 
@@ -34,6 +35,8 @@ install the tools with `local-env install example_profile`.
      of the same name, so do not keep `acme`.
    - Set `repository:` in `ansible/*/galaxy.yml` and `repository.url` in
      `docker/templates.json` to the URL of your repo.
+   - Set `SOURCE_URL` in `onboarding.sh` to the URL of your repo (see
+     [Onboard your team](#onboard-your-team)).
 4. Add your repo to local-env: `local-env sources add <your repo URL>`.
 
 The guide for each part:
@@ -48,6 +51,7 @@ docker/<name>/compose.yaml         # one stack
 ansible/<collection>/              # an Ansible collection: acme.<collection>
 ansible/<collection>/galaxy.yml    # its namespace, name and dependencies
 ansible/<collection>/roles/<role>/ # a role: a tool in the dashboard catalog
+onboarding.sh                      # sets up a new employee's Mac
 scripts/check-templates.sh         # checks docker/, run before each commit
 .github/actions/image/             # builds an image and pushes it to ghcr.io
 .github/workflows/image-<name>.yml # one workflow for each image
@@ -153,12 +157,41 @@ How: [Tool secrets](https://cgaube.github.io/local-env/write-a-source/secrets)
 and the Secrets section of
 [Docker templates](https://cgaube.github.io/local-env/write-a-source/docker-templates).
 
+## Onboard your team
+
+`onboarding.sh` sets up a new employee's Mac with one command: it installs
+Homebrew if it is missing, then local-env, sets it up and starts it, adds this
+source and asks for the employee's profile. Run it again at any time: each step
+skips what is already done.
+
+1. Set the values at the top: `SOURCE_URL` (your repo), `DOMAIN`, `PROFILE`
+   (empty: the employee picks one) and `DOCKER_CASK` (your Docker engine, if the
+   script should install it).
+2. Serve it where a new Mac can download it without a login. A public repo can
+   use its raw URL; for a private repo, copy the file to your intranet or to a
+   public page.
+3. Give your team the command:
+
+   ```sh
+   /bin/bash -c "$(curl -fsSL https://example.com/local-env/onboarding.sh)"
+   ```
+
+To try it with this repo:
+
+```sh
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/cgaube/local-env-templates-example/main/onboarding.sh)"
+```
+
+The guide:
+[Onboard your team](https://cgaube.github.io/local-env/write-a-source/onboard-your-team).
+
 ## Contributing
 
 Run `mise install` once: it installs the tools from `mise.toml` and the git
 hooks. Before each commit, the hooks format the staged files (oxfmt) and check
 the templates (`scripts/check-templates.sh`): every stackfile exists, every
-compose file is valid and has a unique top-level `name:`.
+compose file is valid and has a unique top-level `name:`. They also check the
+shell scripts with shellcheck.
 
 To try a change to the Ansible collections before you push it, run
 `mise run ansible:check` (you need Ansible 2.16 or later). It installs the
