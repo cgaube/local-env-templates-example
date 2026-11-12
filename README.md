@@ -166,9 +166,8 @@ skips what is already done.
 
 1. Set the values at the top: `LOCAL_ENV_SOURCE_URL` (your repo),
    `LOCAL_ENV_DOMAIN` and `LOCAL_ENV_PROFILE` (empty: the employee picks one).
-   An environment variable of the same name wins. The script starts Docker
-   Desktop or OrbStack when the employee uses one, and installs Colima
-   otherwise.
+   An environment variable of the same name wins. Without a running Docker, the
+   script installs and starts Colima.
 2. Serve it where a new Mac can download it without a login. A public repo can
    use its raw URL; for a private repo, copy the file to your intranet or to a
    public page.

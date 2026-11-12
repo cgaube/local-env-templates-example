@@ -86,32 +86,31 @@ ensure_brew() {
   ok 'Homebrew installed'
 }
 
-ensure_colima() {
-  command -v colima >/dev/null && return
-  brew install colima docker docker-compose docker-buildx
-  # Homebrew's docker CLI finds its plugins there
-  local plugins="$HOME/.docker/cli-plugins" plugin
-  mkdir -p "$plugins"
-  for plugin in docker-compose docker-buildx; do
-    [ -e "$plugins/$plugin" ] ||
-      ln -s "$(brew --prefix)/bin/$plugin" "$plugins/"
-  done
+# Homebrew's docker CLI finds its plugins (Compose, Buildx) in Homebrew's
+# folder once its config lists it, as `brew info docker-compose` says
+use_homebrew_plugins() {
+  local config="$HOME/.docker/config.json" dirs
+  dirs="[\"$(brew --prefix)/lib/docker/cli-plugins\"]"
+  mkdir -p "$HOME/.docker"
+  # plutil keeps the other settings, but can't edit an empty file
+  if [ ! -s "$config" ]; then
+    echo "{\"cliPluginsExtraDirs\": $dirs}" >"$config"
+  elif ! plutil -extract cliPluginsExtraDirs json -o - "$config" &>/dev/null
+  then
+    plutil -insert cliPluginsExtraDirs -json "$dirs" "$config"
+  fi
 }
 
-# The Docker engine of this account: Docker Desktop (set up in this account:
-# it linked its plugin) or OrbStack, started when stopped. Otherwise, Colima:
-# installed when missing, then started.
+# A Docker engine that runs is kept: to use another engine than Colima,
+# install and start it before this script. Otherwise, Colima: installed with
+# Homebrew's docker CLI, Compose and Buildx, then started.
 ensure_docker() {
   step 'Docker'
   if ! docker info >/dev/null 2>&1; then
-    if [ -e "$HOME/.docker/cli-plugins/docker-desktop" ]; then
-      docker desktop start
-    elif command -v orb >/dev/null; then
-      orb start
-    else
-      ensure_colima
-      colima start
-    fi
+    command -v colima >/dev/null ||
+      brew install colima docker docker-compose docker-buildx
+    docker compose version &>/dev/null || use_homebrew_plugins
+    colima start
   fi
   # shellcheck disable=SC2016 # the command, as text
   docker compose version >/dev/null 2>&1 ||
